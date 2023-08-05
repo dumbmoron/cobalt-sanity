@@ -1,0 +1,10 @@
+{
+  "name": "cobalt-sanity-ffcheck",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "check.mjs",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ffprobe": "^1.1.2"
+  }
+}
