@@ -21,5 +21,5 @@ tail -n +2 ./instances.csv | while read instance; do
     HOSTNAME=$(echo "$instance" | cut -d, -f2)
     COMMIT=$(echo "$instance" | cut -d, -f3)
     VERSION=$(echo "$instance" | cut -d, -f4)
-    echo "| $HOSTNAME | $POINTS | $VERSION | $COMMIT |"
+    echo "| [$HOSTNAME](https://$HOSTNAME/api/serverInfo) | $POINTS | $VERSION | [$COMMIT](https://github.com/wukko/cobalt/commit/$COMMIT) |"
 done
