@@ -17,22 +17,23 @@ get_serverinfo() { # get_serverinfo(hostname)
     JSON=$(hurl --variable host="$1" tests/elementary/cors-enabled.hurl)
     COMMIT=$(echo "$JSON" | jq -r .commit)
     VERSION=$(echo "$JSON" | jq -r .version)
+    INFO_ERR=0
 
     URL=$(echo "$JSON" | jq -r .url)
     EXPECTED_URL="https://$1/"
     if [ "$URL" != "$EXPECTED_URL" ]; then
         echo "unexpected url: $URL != $EXPECTED_URL" >&2
-        exit 1 # todo: handle load balanced instances (min(instance₀, instance₁, ..., instanceₙ) ?)
+        INFO_ERR=1 # todo: handle load balanced instances (min(instance₀, instance₁, ..., instanceₙ) ?)
     fi
 
     if ! echo "$COMMIT" | grep -qE '^[0-9a-f]{0,7}$'; then
         echo "invalid commit short hash: $COMMIT" >&2
-        exit 1
+        INFO_ERR=1
     fi
 
     if ! echo "$VERSION" | grep -qE '^([0-9]\.){0,4}[0-9]$'; then
         echo "invalid version: $VERSION" >&2
-        exit 1
+        INFO_ERR=1
     fi
 }
 
@@ -77,7 +78,11 @@ do_insert() { # do_insert(hostname, path)
 
     POINTS=$(echo "$RESULT" | cut -d' ' -f2)
     get_serverinfo "$1"
-    echo "$POINTS,$HOSTNAME,$COMMIT,$VERSION" >> "$TABPATH"
+    if [ "$INFO_ERR" != "1" ]; then
+        echo "$POINTS,$HOSTNAME,$COMMIT,$VERSION" >> "$TABPATH"
+    else
+        echo "error while getting server info" >&2
+    fi
 }
 
 
@@ -86,6 +91,7 @@ if [ "$1" = "rescore" ]; then
 elif [ "$1" = "insert" ]; then
     do_insert "$2" $BASE_TABLE
     sort_table $BASE_TABLE
+    exit $INFO_ERR
 else
     echo "usage: $0 update / $0 insert <hostname>" >&2
     exit 1
