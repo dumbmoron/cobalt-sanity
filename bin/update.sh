@@ -24,6 +24,16 @@ get_serverinfo() { # get_serverinfo(hostname)
         echo "unexpected url: $URL != $EXPECTED_URL" >&2
         exit 1 # todo: handle load balanced instances (min(instance₀, instance₁, ..., instanceₙ) ?)
     fi
+
+    if ! echo "$COMMIT" | grep -qE '^[0-9a-f]{0,7}$'; then
+        echo "invalid commit short hash: $COMMIT" >&2
+        exit 1
+    fi
+
+    if ! echo "$VERSION" | grep -qE '^([0-9]\.){0,4}[0-9]$'; then
+        echo "invalid version: $VERSION" >&2
+        exit 1
+    fi
 }
 
 normalize_hostname() {
@@ -37,11 +47,11 @@ normalize_hostname() {
 do_rescore() { # do_rescore()
     TMPTAB=$(mktemp)
     setup_table "$TMPTAB"
-
     cat $BASE_TABLE \
     | tail -n +2 \
     | cut -d, -f2 \
     | while read hostname; do
+        echo "running test suite on $hostname"
         do_insert "$hostname" "$TMPTAB"
     done
 
